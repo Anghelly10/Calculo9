@@ -2,12 +2,13 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Solucionador de Desigualdades</title>
+  <title>Desigualdades con Gráfica</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
       padding: 20px;
-      background-color: #f4f4f4;
+      background: #f0f0f0;
     }
     input, button {
       padding: 10px;
@@ -17,79 +18,94 @@
     }
     #resultado {
       margin-top: 20px;
-      padding: 10px;
+      padding: 15px;
       background: #fff;
-      border-radius: 5px;
-      box-shadow: 0 0 5px #aaa;
+      border-radius: 8px;
+      box-shadow: 0 0 5px #999;
+    }
+    #grafico {
+      margin-top: 30px;
     }
   </style>
 </head>
 <body>
-  <h2>Resolver Desigualdades Lineales y Cuadráticas</h2>
-  <input type="text" id="inputDesigualdad" placeholder="Ejemplo: x^2 - 4 < 0 o 2x - 3 >= 5">
+
+  <h2>Resolver Desigualdades con Gráfica</h2>
+  <input id="input" placeholder="Ej: x^2 - 4 < 0 o 2x - 3 >= 5">
   <button onclick="resolver()">Resolver</button>
+
   <div id="resultado"></div>
+  <div id="grafico"></div>
 
   <script>
     function resolver() {
-      const input = document.getElementById("inputDesigualdad").value;
+      const input = document.getElementById("input").value;
       const resultado = document.getElementById("resultado");
+      const grafico = document.getElementById("grafico");
+      resultado.innerHTML = "";
+      grafico.innerHTML = "";
 
-      try {
-        // Detectar si es cuadrática
-        if (input.includes("^2")) {
-          resolverCuadratica(input);
-        } else {
-          resolverLineal(input);
-        }
-      } catch (e) {
-        resultado.innerHTML = "⚠️ Error al analizar la desigualdad.";
-      }
-    }
-
-    function resolverLineal(expresion) {
-      const resultado = document.getElementById("resultado");
-      const match = expresion.match(/([-+*/x\d\s.]+)(<=|>=|<|>)([-+*/x\d\s.]+)/);
+      const match = input.match(/(.+)(<=|>=|<|>)(.+)/);
       if (!match) {
-        resultado.innerHTML = "Formato incorrecto.";
+        resultado.innerHTML = "⚠️ Formato incorrecto. Usa formato como: x^2 - 4 < 0";
         return;
       }
 
-      let izquierda = match[1].trim().replace(/x/g, "*x");
-      let signo = match[2];
-      let derecha = match[3].trim();
-
-      resultado.innerHTML = `
-        <b>Desigualdad lineal:</b> ${match[1]} ${signo} ${match[3]} <br>
-        <b>Solución:</b> Despeja "x" como si fuera una ecuación. Usa álgebra básica.
-        <br><br>
-        <i>Este demo muestra el proceso, no hace álgebra simbólica completa.</i>
-      `;
-    }
-
-    function resolverCuadratica(expresion) {
-      const resultado = document.getElementById("resultado");
-      const match = expresion.match(/([-+*/x\d\s^]+)(<=|>=|<|>)([-+*/x\d\s.]+)/);
-      if (!match) {
-        resultado.innerHTML = "Formato incorrecto.";
-        return;
-      }
-
-      const ladoIzq = match[1].replace(/\s/g, "").replace(/x\^2/g, "a").replace(/x/g, "b");
+      let izquierda = match[1].trim();
       const signo = match[2];
-      const ladoDer = parseFloat(match[3]);
+      const derecha = match[3].trim();
 
+      // Pasamos todo al lado izquierdo: izquierda - derecha
+      const expresion = `${izquierda} - (${derecha})`.replace(/\^/g, "**");
+
+      // Creamos valores de X y evaluamos Y
+      let x = [], y = [];
+      for (let i = -20; i <= 20; i += 0.1) {
+        x.push(i);
+        try {
+          let val = eval(expresion.replace(/x/g, `(${i})`));
+          y.push(val);
+        } catch {
+          y.push(null);
+        }
+      }
+
+      // Mostramos pasos básicos
       resultado.innerHTML = `
-        <b>Desigualdad cuadrática:</b> ${match[1]} ${signo} ${match[3]} <br>
-        <b>Pasos:</b>
-        <ul>
-          <li>Pasa todo al mismo lado: f(x) ${signo} 0</li>
-          <li>Encuentra las raíces (usando la fórmula general si es necesario)</li>
-          <li>Analiza el signo del trinomio en cada intervalo</li>
-          <li>Usa el criterio del signo según el tipo de desigualdad</li>
-        </ul>
-        <i>Este script da orientación paso a paso. Si quieres automatizar cálculos exactos, necesitas una librería como Math.js</i>
+        <b>Desigualdad:</b> ${input}<br>
+        <b>Forma transformada:</b> ${izquierda} - (${derecha}) ${signo} 0<br>
+        <b>Gráfica de f(x):</b> Ver abajo<br><br>
+        Observa dónde la curva está ${signo === "<" ? "debajo" : signo === ">" ? "encima" : signo === "<=" ? "debajo o en" : "encima o en"} del eje X (y = 0).
       `;
+
+      // Graficar con Plotly
+      const datos = [
+        {
+          x: x,
+          y: y,
+          type: 'scatter',
+          mode: 'lines',
+          name: 'f(x)',
+          line: {color: 'blue'}
+        },
+        {
+          x: x,
+          y: Array(x.length).fill(0),
+          type: 'scatter',
+          mode: 'lines',
+          name: 'y = 0',
+          line: {color: 'red', dash: 'dash'}
+        }
+      ];
+
+      const layout = {
+        title: 'Gráfico de la Desigualdad',
+        xaxis: {title: 'x'},
+        yaxis: {title: 'f(x)'},
+        margin: {t: 40}
+      };
+
+      Plotly.newPlot('grafico', datos, layout);
     }
   </script>
 </body>
