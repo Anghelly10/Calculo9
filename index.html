@@ -2,95 +2,85 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Solucionador de Desigualdades</title>
+  <title>Desigualdad Lineal Resuelta</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: sans-serif;
       padding: 20px;
-      background-color: #f4f4f4;
-    }
-    input, button {
-      padding: 10px;
-      font-size: 16px;
-      width: 100%;
-      margin-top: 10px;
+      background: #f9f9f9;
     }
     #resultado {
       margin-top: 20px;
-      padding: 10px;
+      padding: 15px;
       background: #fff;
-      border-radius: 5px;
-      box-shadow: 0 0 5px #aaa;
+      border-radius: 6px;
+      box-shadow: 0 0 4px #aaa;
+    }
+    #grafico {
+      margin-top: 20px;
     }
   </style>
 </head>
 <body>
-  <h2>Resolver Desigualdades Lineales y Cuadráticas</h2>
-  <input type="text" id="inputDesigualdad" placeholder="Ejemplo: x^2 - 4 < 0 o 2x - 3 >= 5">
-  <button onclick="resolver()">Resolver</button>
-  <div id="resultado"></div>
 
-  <script>
-    function resolver() {
-      const input = document.getElementById("inputDesigualdad").value;
-      const resultado = document.getElementById("resultado");
+<h2>Ejercicio: Resolver la desigualdad lineal</h2>
+<p><strong>2x + 1 &lt; 7</strong></p>
 
-      try {
-        // Detectar si es cuadrática
-        if (input.includes("^2")) {
-          resolverCuadratica(input);
-        } else {
-          resolverLineal(input);
-        }
-      } catch (e) {
-        resultado.innerHTML = "⚠️ Error al analizar la desigualdad.";
-      }
+<button onclick="resolver()">Mostrar solución</button>
+
+<div id="resultado"></div>
+<div id="grafico"></div>
+
+<script>
+function resolver() {
+  const resultado = document.getElementById("resultado");
+  resultado.innerHTML = `
+    <b>Desigualdad:</b> 2x + 1 &lt; 7<br><br>
+    <b>Paso 1:</b> Restamos 1 a ambos lados: <br>
+    2x &lt; 6<br><br>
+    <b>Paso 2:</b> Dividimos entre 2:<br>
+    x &lt; 3<br><br>
+    ✅ <b>Solución:</b> x < 3
+  `;
+
+  // Crear gráfico
+  const x = [];
+  const y = [];
+
+  for (let i = -10; i <= 10; i += 0.1) {
+    x.push(i);
+    y.push(2 * i + 1);
+  }
+
+  const datos = [
+    {
+      x: x,
+      y: y,
+      type: 'scatter',
+      mode: 'lines',
+      name: 'f(x) = 2x + 1',
+      line: { color: 'blue' }
+    },
+    {
+      x: x,
+      y: Array(x.length).fill(7),
+      type: 'scatter',
+      mode: 'lines',
+      name: 'y = 7',
+      line: { color: 'red', dash: 'dash' }
     }
+  ];
 
-    function resolverLineal(expresion) {
-      const resultado = document.getElementById("resultado");
-      const match = expresion.match(/([-+*/x\d\s.]+)(<=|>=|<|>)([-+*/x\d\s.]+)/);
-      if (!match) {
-        resultado.innerHTML = "Formato incorrecto.";
-        return;
-      }
+  const layout = {
+    title: 'Gráfico de la desigualdad 2x + 1 < 7',
+    xaxis: { title: 'x' },
+    yaxis: { title: 'y' }
+  };
 
-      let izquierda = match[1].trim().replace(/x/g, "*x");
-      let signo = match[2];
-      let derecha = match[3].trim();
+  Plotly.newPlot('grafico', datos, layout);
+}
+</script>
 
-      resultado.innerHTML = `
-        <b>Desigualdad lineal:</b> ${match[1]} ${signo} ${match[3]} <br>
-        <b>Solución:</b> Despeja "x" como si fuera una ecuación. Usa álgebra básica.
-        <br><br>
-        <i>Este demo muestra el proceso, no hace álgebra simbólica completa.</i>
-      `;
-    }
-
-    function resolverCuadratica(expresion) {
-      const resultado = document.getElementById("resultado");
-      const match = expresion.match(/([-+*/x\d\s^]+)(<=|>=|<|>)([-+*/x\d\s.]+)/);
-      if (!match) {
-        resultado.innerHTML = "Formato incorrecto.";
-        return;
-      }
-
-      const ladoIzq = match[1].replace(/\s/g, "").replace(/x\^2/g, "a").replace(/x/g, "b");
-      const signo = match[2];
-      const ladoDer = parseFloat(match[3]);
-
-      resultado.innerHTML = `
-        <b>Desigualdad cuadrática:</b> ${match[1]} ${signo} ${match[3]} <br>
-        <b>Pasos:</b>
-        <ul>
-          <li>Pasa todo al mismo lado: f(x) ${signo} 0</li>
-          <li>Encuentra las raíces (usando la fórmula general si es necesario)</li>
-          <li>Analiza el signo del trinomio en cada intervalo</li>
-          <li>Usa el criterio del signo según el tipo de desigualdad</li>
-        </ul>
-        <i>Este script da orientación paso a paso. Si quieres automatizar cálculos exactos, necesitas una librería como Math.js</i>
-      `;
-    }
-  </script>
 </body>
 </html>
